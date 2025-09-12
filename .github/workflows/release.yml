@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -65,11 +68,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List release files
-        run: ls -la release/
+        run: |
+          echo "Contents of release directory:"
+          ls -la release/ || echo "No release directory found"
+          echo "Current working directory:"
+          pwd
+          echo "All files in current directory:"
+          ls -la
 
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
+        if: hashFiles('release/*') != ''
         with:
           files: release/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
