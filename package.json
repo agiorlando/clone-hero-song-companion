@@ -56,11 +56,11 @@
     ],
     "mac": {
       "category": "public.app-category.music",
-      "identity": null,
-      "entitlements": null,
-      "entitlementsInherit": null,
+      "identity": "-",
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.inherit.plist",
       "gatekeeperAssess": false,
-      "hardenedRuntime": false,
+      "hardenedRuntime": true,
       "target": [
         {
           "target": "dmg",

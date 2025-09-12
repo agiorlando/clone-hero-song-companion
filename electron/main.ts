@@ -205,7 +205,9 @@ const createHiddenBrowser = (): Promise<void> => {
         nodeIntegration: false,
         contextIsolation: true,
         webSecurity: false,
-        backgroundThrottling: false // Prevent throttling when hidden
+        backgroundThrottling: false, // Prevent throttling when hidden
+        allowRunningInsecureContent: true,
+        experimentalFeatures: true
       }
     })
 
@@ -267,7 +269,9 @@ const createWindow = (): void => {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: false // Needed for API calls to enchor.us
+      webSecurity: false, // Needed for API calls to enchor.us
+      allowRunningInsecureContent: true,
+      experimentalFeatures: true
     },
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
     titleBarOverlay: process.platform === 'win32' ? {
@@ -312,9 +316,12 @@ const createWindow = (): void => {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
-    // Open DevTools in production for debugging
+    // Open DevTools in production for debugging (temporary)
     if (process.env.NODE_ENV !== 'development') {
       mainWindow.webContents.openDevTools()
+      console.log('Production mode - DevTools opened for debugging')
+      console.log('App data path:', app.getPath('userData'))
+      console.log('Downloads path:', app.getPath('downloads'))
     }
   })
 
@@ -381,11 +388,14 @@ ipcMain.handle('search-songs', async (event, query: string, page: number, instru
 
 // Function to download using the hidden browser window with service worker pattern
 const downloadWithHiddenBrowser = async (downloadUrl: string): Promise<Buffer> => {
+  console.log('🔽 Starting download with hidden browser:', downloadUrl)
   return new Promise(async (resolve, reject) => {
     // Ensure hidden browser is available
     try {
+      console.log('📱 Ensuring hidden browser is ready...')
       await ensureHiddenBrowser()
     } catch (error) {
+      console.error('❌ Failed to ensure hidden browser:', error)
       reject(new Error(`Failed to ensure hidden browser: ${error instanceof Error ? error.message : error}`))
       return
     }
@@ -487,6 +497,7 @@ const downloadWithHiddenBrowser = async (downloadUrl: string): Promise<Buffer> =
 
 // Download a song
 ipcMain.handle('download-song', async (event, songData: any, format: 'zip' | 'sng', downloadPath: string) => {
+  console.log('🎵 Download request received:', songData.name, 'format:', format, 'path:', downloadPath)
   try {
     if (!songData.md5) {
       throw new Error('No download available for this song (missing md5)')

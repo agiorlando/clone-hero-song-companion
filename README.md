@@ -32,6 +32,20 @@ A modern, cross-platform desktop application for searching and downloading Clone
 
 ### First-Time Setup
 
+#### macOS Users - Important Security Note
+On first launch, macOS may show a security warning. To bypass this:
+
+**Method 1 (Recommended):**
+1. Right-click the app and select "Open"
+2. Click "Open" in the security dialog
+
+**Method 2 (Terminal):**
+```bash
+# Remove quarantine attribute (run in Terminal)
+sudo xattr -rd com.apple.quarantine "/Applications/Clone Hero Song Companion.app"
+```
+
+#### All Platforms
 1. **Launch the application**
 2. **Click the Settings button (⚙️)** in the top-right corner
 3. **Select your Clone Hero songs directory** (the app will try to auto-detect it)
