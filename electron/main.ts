@@ -282,11 +282,40 @@ const createWindow = (): void => {
     mainWindow.loadURL('http://localhost:3000')
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    // In production, try multiple possible paths
+    const possiblePaths = [
+      join(__dirname, '../renderer/index.html'),
+      join(__dirname, 'renderer/index.html'),
+      join(process.resourcesPath, 'app/dist/renderer/index.html')
+    ]
+    
+    let rendererPath = possiblePaths[0]
+    for (const path of possiblePaths) {
+      if (fsExtra.existsSync(path)) {
+        rendererPath = path
+        break
+      }
+    }
+    
+    console.log('Loading renderer from:', rendererPath)
+    console.log('File exists:', fsExtra.existsSync(rendererPath))
+    mainWindow.loadFile(rendererPath)
   }
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load renderer:', errorCode, errorDescription)
+  })
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Renderer loaded successfully')
+  })
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    // Open DevTools in production for debugging
+    if (process.env.NODE_ENV !== 'development') {
+      mainWindow.webContents.openDevTools()
+    }
   })
 
   // Hidden browser will be created after first search for faster startup
