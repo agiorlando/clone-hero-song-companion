@@ -3,12 +3,12 @@ import { contextBridge, ipcRenderer } from 'electron'
 // Define the API that will be exposed to the renderer process
 const electronAPI = {
   // Search functionality
-  searchSongs: (query: string, instrument?: string, difficulty?: string) =>
-    ipcRenderer.invoke('search-songs', query, instrument, difficulty),
+  searchSongs: (query: string, page: number, instrument?: string, difficulty?: string) =>
+    ipcRenderer.invoke('search-songs', query, page, instrument, difficulty),
 
   // Download functionality
-  downloadSong: (songUrl: string, format: 'zip' | 'sng', downloadPath: string, songName: string) =>
-    ipcRenderer.invoke('download-song', songUrl, format, downloadPath, songName),
+  downloadSong: (songData: any, format: 'zip' | 'sng', downloadPath: string) =>
+    ipcRenderer.invoke('download-song', songData, format, downloadPath),
 
   // File system operations
   selectDirectory: () => ipcRenderer.invoke('select-directory'),
@@ -16,6 +16,10 @@ const electronAPI = {
 
   // Clone Hero settings
   getCloneHeroSettings: () => ipcRenderer.invoke('get-clone-hero-settings'),
+
+  // User settings
+  saveUserSettings: (settings: any) => ipcRenderer.invoke('save-user-settings', settings),
+  getUserSettings: () => ipcRenderer.invoke('get-user-settings'),
 }
 
 // Expose the API to the renderer process

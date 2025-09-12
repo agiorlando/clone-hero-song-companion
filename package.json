@@ -1,11 +1,11 @@
 {
   "name": "clone-hero-song-companion",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A companion application for Clone Hero to search and download songs from enchor.us",
   "main": "dist/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
-    "dev:main": "tsc -p tsconfig.main.json && electron dist/main.js",
+    "dev:main": "tsc -p tsconfig.main.json && NODE_ENV=development electron dist/main.js",
     "dev:renderer": "vite",
     "build": "npm run build:main && npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
@@ -16,7 +16,13 @@
     "build:linux": "npm run build && electron-builder --linux",
     "postinstall": "electron-builder install-app-deps"
   },
-  "keywords": ["clone-hero", "music", "guitar-hero", "electron", "vue"],
+  "keywords": [
+    "clone-hero",
+    "music",
+    "guitar-hero",
+    "electron",
+    "vue"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
@@ -33,6 +39,7 @@
   "dependencies": {
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
+    "electron-squirrel-startup": "^1.0.1",
     "extract-zip": "^2.0.1",
     "fs-extra": "^11.1.1"
   },
@@ -51,7 +58,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ]
     },
@@ -59,7 +69,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "ia32"]
+          "arch": [
+            "x64",
+            "ia32"
+          ]
         }
       ]
     },
@@ -67,7 +80,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     }
