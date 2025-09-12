@@ -34,16 +34,33 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Build Electron app
+      - name: Prepare build environment (Linux)
+        if: matrix.platform == 'linux'
         run: |
-          if [ "${{ matrix.platform }}" == "linux" ]; then
-            npm run build:linux
-          elif [ "${{ matrix.platform }}" == "win" ]; then
-            npm run build:win
-          elif [ "${{ matrix.platform }}" == "mac" ]; then
-            npm run build:mac
-          fi
-        shell: bash
+          sudo apt-get update
+          sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libxss1 libasound2-dev
+
+      - name: Prepare build environment (macOS)
+        if: matrix.platform == 'mac'
+        run: |
+          # Install any macOS-specific dependencies if needed
+          echo "Preparing macOS build environment"
+
+      - name: Build Electron app (Linux)
+        if: matrix.platform == 'linux'
+        run: npm run build:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron app (Windows)
+        if: matrix.platform == 'win'
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron app (macOS)
+        if: matrix.platform == 'mac'
+        run: npm run build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
