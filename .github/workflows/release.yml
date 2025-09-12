@@ -51,23 +51,29 @@ jobs:
 
       - name: Build Electron app (Linux)
         if: matrix.platform == 'linux'
+        shell: bash
         run: npm run build:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron app (Windows)
         if: matrix.platform == 'win'
-        run: npm run build:win
+        shell: bash
+        run: |
+          echo "Building Windows app..."
+          npm run build:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron app (macOS)
         if: matrix.platform == 'mac'
+        shell: bash
         run: npm run build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List release files
+        shell: bash
         run: |
           echo "Contents of release directory:"
           ls -la release/ || echo "No release directory found"
