@@ -1,0 +1,46 @@
+name: Build Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Test Electron app builds
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            npm run build:linux
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            npm run build:win
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            npm run build:mac
+          fi
+        shell: bash
+
+      - name: List build output
+        run: ls -la release/ || echo "No release directory found"
+        shell: bash

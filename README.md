@@ -22,11 +22,13 @@ A modern, cross-platform desktop application for searching and downloading Clone
 
 ### Download & Install
 
-1. **Go to [Releases](https://github.com/yourusername/clone-hero-song-companion/releases)**
+1. **Go to [Releases](https://github.com/agiorlando/clone-hero-song-companion/releases)**
 2. **Download the appropriate version for your platform:**
-   - **Windows**: `Clone-Hero-Song-Companion-Setup-0.1.0.exe`
-   - **macOS**: `Clone-Hero-Song-Companion-0.1.0.dmg`
-   - **Linux**: `Clone-Hero-Song-Companion-0.1.0.AppImage`
+   - **Windows (64-bit)**: `Clone-Hero-Song-Companion-Setup-vX.X.X-x64.exe`
+   - **Windows (32-bit)**: `Clone-Hero-Song-Companion-Setup-vX.X.X-ia32.exe`
+   - **macOS (Intel)**: `Clone-Hero-Song-Companion-vX.X.X-mac-x64.dmg`
+   - **macOS (Apple Silicon)**: `Clone-Hero-Song-Companion-vX.X.X-mac-arm64.dmg`
+   - **Linux**: `Clone-Hero-Song-Companion-vX.X.X-linux.AppImage`
 
 ### First-Time Setup
 
@@ -90,7 +92,7 @@ A modern, cross-platform desktop application for searching and downloading Clone
 - **Settings not saving**: Ensure the app has write permissions to its data directory
 
 ### Getting Help
-- Check the [Issues](https://github.com/yourusername/clone-hero-song-companion/issues) page
+- Check the [Issues](https://github.com/agiorlando/clone-hero-song-companion/issues) page
 - Create a new issue with:
   - Your operating system and version
   - Steps to reproduce the problem
@@ -103,7 +105,7 @@ We welcome contributions! Here's how to get started:
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/clone-hero-song-companion.git
+git clone https://github.com/agiorlando/clone-hero-song-companion.git
 cd clone-hero-song-companion
 
 # Install dependencies
@@ -147,7 +149,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Clone Hero**: [Official Website](https://clonehero.net/)
 - **enchor.us**: [Song Database](https://www.enchor.us/)
-- **Report Issues**: [GitHub Issues](https://github.com/yourusername/clone-hero-song-companion/issues)
+- **Report Issues**: [GitHub Issues](https://github.com/agiorlando/clone-hero-song-companion/issues)
 
 ---
 
