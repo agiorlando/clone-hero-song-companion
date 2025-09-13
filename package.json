@@ -14,6 +14,8 @@
     "build:all": "npm run build && electron-builder",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac",
+    "build:mac-arm64": "npm run build && electron-builder --mac --arm64",
+    "build:mac-universal": "npm run build && electron-builder --mac --universal",
     "build:linux": "npm run build && electron-builder --linux",
     "postinstall": "electron-builder install-app-deps"
   },
@@ -67,11 +69,7 @@
       "notarize": false,
       "target": [
         {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
+          "target": "dmg"
         }
       ]
     },

@@ -33,6 +33,12 @@ A modern, cross-platform desktop application for searching and downloading Clone
 ### First-Time Setup
 
 #### macOS Users - Important Security Note
+
+**📱 Choose Your Architecture:**
+- **Intel Macs**: Download the x64 version
+- **Apple Silicon Macs (M1/M2/M3)**: Download the ARM64 version for best performance, or x64 (works via Rosetta 2)
+
+**Security Warnings:**
 On first launch, macOS may show a security warning. To bypass this:
 
 **Method 1 (Recommended):**

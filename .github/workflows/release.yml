@@ -22,6 +22,10 @@ jobs:
             platform: win
           - os: macos-latest
             platform: mac
+            arch: x64
+          - os: macos-latest
+            platform: mac
+            arch: arm64
 
     steps:
       - name: Checkout code
@@ -67,10 +71,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Electron app (macOS)
-        if: matrix.platform == 'mac'
+      - name: Build Electron app (macOS x64)
+        if: matrix.platform == 'mac' && matrix.arch == 'x64'
         shell: bash
-        run: npm run build:mac
+        run: npm run build && electron-builder --mac --x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron app (macOS ARM64)
+        if: matrix.platform == 'mac' && matrix.arch == 'arm64'
+        shell: bash
+        run: npm run build && electron-builder --mac --arm64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
