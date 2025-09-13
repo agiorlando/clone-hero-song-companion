@@ -81,7 +81,24 @@ jobs:
       - name: Build Electron app (macOS ARM64)
         if: matrix.platform == 'mac' && matrix.arch == 'arm64'
         shell: bash
-        run: npm run build && npx electron-builder --mac --arm64
+        run: |
+          npm run build
+          npx electron-builder --mac --arm64
+          # Post-build: Force sign ARM64 build to prevent "damaged" error
+          echo "Signing ARM64 build..."
+          APP_PATH=$(find release -name "*.app" -type d | head -1)
+          if [ -n "$APP_PATH" ]; then
+            echo "Found app at: $APP_PATH"
+            # Remove quarantine attributes that might cause issues
+            sudo xattr -cr "$APP_PATH" || true
+            # Force sign with ad-hoc signature
+            codesign --force --deep --sign - "$APP_PATH"
+            # Verify the signature
+            codesign --verify --verbose "$APP_PATH"
+          else
+            echo "No .app found in release directory"
+            ls -la release/ || echo "No release directory"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

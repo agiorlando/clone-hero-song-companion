@@ -60,13 +60,7 @@
     "icon": "assets/icons/icon.png",
     "mac": {
       "category": "public.app-category.music",
-      "identity": "-",
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.inherit.plist",
-      "gatekeeperAssess": false,
-      "hardenedRuntime": true,
       "icon": "assets/icons/chsc.iconset",
-      "notarize": false,
       "target": [
         {
           "target": "dmg"
