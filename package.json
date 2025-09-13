@@ -63,7 +63,8 @@
       "icon": "assets/icons/chsc.iconset",
       "target": [
         {
-          "target": "dmg"
+          "target": "dmg",
+          "arch": ["universal"]
         }
       ]
     },

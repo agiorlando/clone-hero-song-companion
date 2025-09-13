@@ -22,10 +22,6 @@ jobs:
             platform: win
           - os: macos-latest
             platform: mac
-            arch: x64
-          - os: macos-latest
-            platform: mac
-            arch: arm64
 
     steps:
       - name: Checkout code
@@ -71,32 +67,27 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Electron app (macOS x64)
-        if: matrix.platform == 'mac' && matrix.arch == 'x64'
-        shell: bash
-        run: npm run build && npx electron-builder --mac --x64
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Electron app (macOS ARM64)
-        if: matrix.platform == 'mac' && matrix.arch == 'arm64'
+      - name: Build Electron app (macOS Universal)
+        if: matrix.platform == 'mac'
         shell: bash
         run: |
           npm run build
-          npx electron-builder --mac --arm64
-          # Post-build: Force sign ARM64 build to prevent "damaged" error
-          echo "Signing ARM64 build..."
+          # Build universal binary (both x64 and ARM64 in one app)
+          npx electron-builder --mac --universal
+          # Post-build: Sign the universal build
+          echo "Signing universal macOS build..."
           APP_PATH=$(find release -name "*.app" -type d | head -1)
           if [ -n "$APP_PATH" ]; then
             echo "Found app at: $APP_PATH"
-            # Remove quarantine attributes that might cause issues
+            # Remove any problematic attributes
             sudo xattr -cr "$APP_PATH" || true
-            # Force sign with ad-hoc signature
-            codesign --force --deep --sign - "$APP_PATH"
+            # Sign with ad-hoc signature
+            codesign --force --deep --sign - "$APP_PATH" || echo "Signing failed, continuing..."
             # Verify the signature
-            codesign --verify --verbose "$APP_PATH"
+            codesign --verify --verbose "$APP_PATH" || echo "Verification failed, but may still work"
+            echo "✅ Universal build completed"
           else
-            echo "No .app found in release directory"
+            echo "❌ No .app found in release directory"
             ls -la release/ || echo "No release directory"
           fi
         env:

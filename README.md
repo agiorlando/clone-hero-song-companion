@@ -34,9 +34,8 @@ A modern, cross-platform desktop application for searching and downloading Clone
 
 #### macOS Users - Important Security Note
 
-**📱 Choose Your Architecture:**
-- **Intel Macs**: Download the x64 version
-- **Apple Silicon Macs (M1/M2/M3)**: Download the ARM64 version for best performance, or x64 (works via Rosetta 2)
+**🍎 Universal macOS App:**
+- **All Macs**: Download the Universal version (works natively on both Intel and Apple Silicon)
 
 **Security Warnings:**
 On first launch, macOS may show a security warning. To bypass this:
@@ -45,7 +44,16 @@ On first launch, macOS may show a security warning. To bypass this:
 1. Right-click the app and select "Open"
 2. Click "Open" in the security dialog
 
-**Method 2 (Terminal):**
+**Method 2 (Fix Script):**
+If the app still shows as "damaged", download and run our fix script:
+```bash
+# Download and run the fix script
+curl -O https://raw.githubusercontent.com/agiorlando/clone-hero-song-companion/main/fix-macos-app.sh
+chmod +x fix-macos-app.sh
+./fix-macos-app.sh
+```
+
+**Method 3 (Manual Terminal):**
 ```bash
 # Remove quarantine attribute (run in Terminal)
 sudo xattr -rd com.apple.quarantine "/Applications/Clone Hero Song Companion.app"
