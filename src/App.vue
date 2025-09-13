@@ -78,7 +78,7 @@
               :key="song.chartId"
               class="song-card"
               :class="{ 
-                selected: selectedSongs.has(song.chartId),
+                selected: selectedSongs.value.includes(song.chartId),
                 'no-download': !song.md5
               }"
               @click="handleSongRowClick(song)"
@@ -119,7 +119,7 @@
               <div class="song-actions">
                 <input 
                   type="checkbox" 
-                  :checked="selectedSongs.has(song.chartId)"
+                  :checked="selectedSongs.value.includes(song.chartId)"
                   @change="toggleSongSelection(song.chartId)"
                   @click.stop
                   :disabled="!song.md5"
@@ -250,7 +250,7 @@ const selectedInstrument = ref('')
 const selectedDifficulty = ref('')
 const downloadFormat = ref<'zip' | 'sng'>('zip')
 const searchResults = ref<Song[]>([])
-const selectedSongs = ref<Set<number>>(new Set())
+const selectedSongs = ref<number[]>([])
 const loading = ref(false)
 const downloading = ref(false)
 const hasSearched = ref(false)
@@ -285,7 +285,7 @@ const searchSongs = async (loadMore: boolean = false) => {
     
     // Force clear the results array
     searchResults.value.length = 0
-    selectedSongs.value.clear()
+    selectedSongs.value.length = 0
     
     totalFound.value = 0
     totalSongs.value = 0
@@ -335,10 +335,11 @@ const searchSongs = async (loadMore: boolean = false) => {
 }
 
 const toggleSongSelection = (songId: number) => {
-  if (selectedSongs.value.has(songId)) {
-    selectedSongs.value.delete(songId)
+  const index = selectedSongs.value.indexOf(songId)
+  if (index > -1) {
+    selectedSongs.value.splice(index, 1)
   } else {
-    selectedSongs.value.add(songId)
+    selectedSongs.value.push(songId)
   }
 }
 
@@ -393,7 +394,7 @@ const downloadSelected = async () => {
   
   downloading.value = true
   const songsToDownload = searchResults.value.filter(song => 
-    selectedSongs.value.has(song.chartId) && song.md5
+    selectedSongs.value.includes(song.chartId) && song.md5
   )
   
   if (songsToDownload.length === 0) {
@@ -451,11 +452,11 @@ const selectAll = () => {
     .filter(song => song.md5) // Only select downloadable songs
     .map(song => song.chartId)
   
-  selectedSongs.value = new Set(downloadableSongs)
+  selectedSongs.value = [...downloadableSongs]
 }
 
 const clearSelection = () => {
-  selectedSongs.value.clear()
+  selectedSongs.value.length = 0
 }
 
 // Infinite scroll functionality

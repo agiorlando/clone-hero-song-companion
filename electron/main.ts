@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join } from 'path'
 import { promises as fs } from 'fs'
+import { tmpdir } from 'os'
 import axios, { AxiosInstance } from 'axios'
 import extractZip from 'extract-zip'
 import * as fsExtra from 'fs-extra'
@@ -568,13 +569,16 @@ ipcMain.handle('download-song', async (event, songData: any, format: 'zip' | 'sn
     }
 
     if (format === 'zip') {
-      // Create temp file for zip
-      const tempZipPath = join(__dirname, 'temp', `${safeFileName}.zip`)
-      await fsExtra.ensureDir(join(__dirname, 'temp'))
+      // Create temp file for zip using system temp directory
+      const systemTempDir = tmpdir()
+      const appTempDir = join(systemTempDir, 'clone-hero-companion')
+      await fsExtra.ensureDir(appTempDir)
+      
+      const tempZipPath = join(appTempDir, `${safeFileName}.zip`)
       await fs.writeFile(tempZipPath, buffer)
 
       // Create temporary extraction directory to inspect contents
-      const tempExtractDir = join(__dirname, 'temp', `extract_${Date.now()}`)
+      const tempExtractDir = join(appTempDir, `extract_${Date.now()}`)
       await fsExtra.ensureDir(tempExtractDir)
       
       // Extract ZIP to temp directory first
@@ -613,8 +617,9 @@ ipcMain.handle('download-song', async (event, songData: any, format: 'zip' | 'sn
       await fsExtra.copy(sourceDir, extractPath, { overwrite: true })
       
       // Clean up temp files
-      await fs.unlink(tempZipPath)
-      await fsExtra.remove(tempExtractDir)
+      console.log('🧹 Cleaning up temp files...')
+      await fs.unlink(tempZipPath).catch(err => console.warn('Failed to delete temp zip:', err))
+      await fsExtra.remove(tempExtractDir).catch(err => console.warn('Failed to delete temp extract dir:', err))
       
       return { success: true, path: extractPath }
     } else {
