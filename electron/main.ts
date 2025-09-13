@@ -302,8 +302,6 @@ const createWindow = (): void => {
       }
     }
     
-    console.log('Loading renderer from:', rendererPath)
-    console.log('File exists:', fsExtra.existsSync(rendererPath))
     mainWindow.loadFile(rendererPath)
   }
 
@@ -317,13 +315,7 @@ const createWindow = (): void => {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
-    // Open DevTools in production for debugging (temporary)
-    if (process.env.NODE_ENV !== 'development') {
-      mainWindow.webContents.openDevTools()
-      console.log('Production mode - DevTools opened for debugging')
-      console.log('App data path:', app.getPath('userData'))
-      console.log('Downloads path:', app.getPath('downloads'))
-    }
+    // DevTools can be opened manually if needed for debugging
   })
 
   // Hidden browser will be created after first search for faster startup
@@ -389,14 +381,12 @@ ipcMain.handle('search-songs', async (event, query: string, page: number, instru
 
 // Function to download using the hidden browser window with service worker pattern
 const downloadWithHiddenBrowser = async (downloadUrl: string): Promise<Buffer> => {
-  console.log('🔽 Starting download with hidden browser:', downloadUrl)
   return new Promise(async (resolve, reject) => {
     // Ensure hidden browser is available
     try {
-      console.log('📱 Ensuring hidden browser is ready...')
       await ensureHiddenBrowser()
     } catch (error) {
-      console.error('❌ Failed to ensure hidden browser:', error)
+      console.error('Failed to ensure hidden browser:', error)
       reject(new Error(`Failed to ensure hidden browser: ${error instanceof Error ? error.message : error}`))
       return
     }
@@ -498,7 +488,6 @@ const downloadWithHiddenBrowser = async (downloadUrl: string): Promise<Buffer> =
 
 // Download a song
 ipcMain.handle('download-song', async (event, songData: any, format: 'zip' | 'sng', downloadPath: string) => {
-  console.log('🎵 Download request received:', songData.name, 'format:', format, 'path:', downloadPath)
   try {
     if (!songData.md5) {
       throw new Error('No download available for this song (missing md5)')
@@ -617,7 +606,6 @@ ipcMain.handle('download-song', async (event, songData: any, format: 'zip' | 'sn
       await fsExtra.copy(sourceDir, extractPath, { overwrite: true })
       
       // Clean up temp files
-      console.log('🧹 Cleaning up temp files...')
       await fs.unlink(tempZipPath).catch(err => console.warn('Failed to delete temp zip:', err))
       await fsExtra.remove(tempExtractDir).catch(err => console.warn('Failed to delete temp extract dir:', err))
       

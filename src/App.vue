@@ -78,7 +78,7 @@
               :key="song.chartId"
               class="song-card"
               :class="{ 
-                selected: selectedSongs.value?.includes(song.chartId) || false,
+                selected: isSongSelected(song.chartId),
                 'no-download': !song.md5
               }"
               @click="handleSongRowClick(song)"
@@ -119,7 +119,7 @@
               <div class="song-actions">
                 <input 
                   type="checkbox" 
-                  :checked="selectedSongs.value?.includes(song.chartId) || false"
+                  :checked="isSongSelected(song.chartId)"
                   @change="toggleSongSelection(song.chartId)"
                   @click.stop
                   :disabled="!song.md5"
@@ -184,14 +184,14 @@
         </div>
         
         <div class="selection-info">
-          {{ selectedSongs.value?.length || 0 }} songs selected
+          {{ selectedCount }} songs selected
         </div>
         
         <div class="footer-actions">
           <button 
             @click="selectAll" 
             class="select-all-btn"
-            :disabled="(selectedSongs.value?.length || 0) === searchResults.length"
+            :disabled="selectedCount === searchResults.length"
           >
             Select All
           </button>
@@ -205,9 +205,9 @@
           <button 
             @click="downloadSelected" 
             class="download-selected-btn"
-            :disabled="selectedSongs.size === 0 || downloading"
+            :disabled="!isAnySongSelected || downloading"
           >
-            {{ downloading ? 'Downloading...' : `Download ${selectedSongs.size} Songs` }}
+            {{ downloading ? 'Downloading...' : `Download ${selectedCount} Songs` }}
           </button>
         </div>
       </div>
@@ -216,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import type { Song, SearchResponse } from './types/electron'
 
 // Helper functions
@@ -251,6 +251,14 @@ const selectedDifficulty = ref('')
 const downloadFormat = ref<'zip' | 'sng'>('zip')
 const searchResults = ref<Song[]>([])
 const selectedSongs = ref<number[]>([])
+
+// Computed properties for reactivity
+const selectedCount = computed(() => selectedSongs.value.length)
+const isAnySongSelected = computed(() => selectedSongs.value.length > 0)
+
+// Helper function for checking if a song is selected
+const isSongSelected = (songId: number) => selectedSongs.value.includes(songId)
+
 const loading = ref(false)
 const downloading = ref(false)
 const hasSearched = ref(false)
@@ -285,9 +293,7 @@ const searchSongs = async (loadMore: boolean = false) => {
     
     // Force clear the results array
     searchResults.value.length = 0
-    if (selectedSongs.value) {
-      selectedSongs.value.length = 0
-    }
+    selectedSongs.value = []
     
     totalFound.value = 0
     totalSongs.value = 0
@@ -341,9 +347,11 @@ const toggleSongSelection = (songId: number) => {
   
   const index = selectedSongs.value.indexOf(songId)
   if (index > -1) {
-    selectedSongs.value.splice(index, 1)
+    // Create a new array to trigger reactivity
+    selectedSongs.value = selectedSongs.value.filter(id => id !== songId)
   } else {
-    selectedSongs.value.push(songId)
+    // Create a new array to trigger reactivity
+    selectedSongs.value = [...selectedSongs.value, songId]
   }
 }
 
@@ -398,7 +406,7 @@ const downloadSelected = async () => {
   
   downloading.value = true
   const songsToDownload = searchResults.value.filter(song => 
-    selectedSongs.value?.includes(song.chartId) && song.md5
+    isSongSelected(song.chartId) && song.md5
   )
   
   if (songsToDownload.length === 0) {
@@ -460,8 +468,7 @@ const selectAll = () => {
 }
 
 const clearSelection = () => {
-  if (!selectedSongs.value) return
-  selectedSongs.value.length = 0
+  selectedSongs.value = []
 }
 
 // Infinite scroll functionality
