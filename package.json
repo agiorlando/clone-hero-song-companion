@@ -64,6 +64,7 @@
       "gatekeeperAssess": false,
       "hardenedRuntime": true,
       "icon": "assets/icons/chsc.iconset",
+      "notarize": false,
       "target": [
         {
           "target": "dmg",
