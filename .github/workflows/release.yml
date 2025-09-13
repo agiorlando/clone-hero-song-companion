@@ -74,14 +74,14 @@ jobs:
       - name: Build Electron app (macOS x64)
         if: matrix.platform == 'mac' && matrix.arch == 'x64'
         shell: bash
-        run: npm run build && electron-builder --mac --x64
+        run: npm run build && npx electron-builder --mac --x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron app (macOS ARM64)
         if: matrix.platform == 'mac' && matrix.arch == 'arm64'
         shell: bash
-        run: npm run build && electron-builder --mac --arm64
+        run: npm run build && npx electron-builder --mac --arm64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
