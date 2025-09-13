@@ -1,6 +1,6 @@
 {
   "name": "clone-hero-song-companion",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A companion application for Clone Hero to search and download songs from enchor.us",
   "main": "dist/main.js",
   "scripts": {
