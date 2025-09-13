@@ -39,3 +39,6 @@ temp/
 
 # Electron
 electron/temp/
+
+# Original icon pack (copied to assets/)
+CHSC_Icon_Pack_All/

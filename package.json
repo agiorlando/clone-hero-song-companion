@@ -52,8 +52,10 @@
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "assets/**/*"
     ],
+    "icon": "assets/icons/icon.png",
     "mac": {
       "category": "public.app-category.music",
       "identity": "-",
@@ -61,6 +63,7 @@
       "entitlementsInherit": "entitlements.mac.inherit.plist",
       "gatekeeperAssess": false,
       "hardenedRuntime": true,
+      "icon": "assets/icons/chsc.iconset",
       "target": [
         {
           "target": "dmg",
@@ -72,6 +75,7 @@
       ]
     },
     "win": {
+      "icon": "assets/icons/chsc.ico",
       "target": [
         {
           "target": "nsis",
@@ -83,6 +87,7 @@
       ]
     },
     "linux": {
+      "icon": "assets/icons/chsc_512x512.png",
       "target": [
         {
           "target": "AppImage",
