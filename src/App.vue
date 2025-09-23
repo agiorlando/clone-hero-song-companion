@@ -39,9 +39,9 @@
               type="text" 
               placeholder="Search for songs..."
               class="search-input"
-              @keyup.enter="searchSongs"
+              @keyup.enter="searchSongs(false)"
             />
-            <button @click="searchSongs" class="search-btn" :disabled="loading">
+            <button @click="searchSongs(false)" class="search-btn" :disabled="loading">
               {{ loading ? 'Searching...' : 'Search' }}
             </button>
           </div>

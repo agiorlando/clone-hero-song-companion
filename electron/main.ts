@@ -123,7 +123,7 @@ const establishSession = async (): Promise<void> => {
     // Step 3: Perform a search to activate the session (like your first attempt)
     console.log('Step 3: Performing initial search to activate session...')
     await axiosWithCookies.post('https://api.enchor.us/search', {
-      search: "test",
+      search: "session_init_query_xyz123",
       page: 1,
       instrument: null,
       difficulty: null,
@@ -370,7 +370,6 @@ ipcMain.handle('search-songs', async (event, query: string, page: number, instru
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'
       }
     })
-    
     
     return response.data
   } catch (error) {
