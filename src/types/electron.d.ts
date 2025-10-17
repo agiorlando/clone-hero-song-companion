@@ -4,6 +4,11 @@ export interface ElectronAPI {
   selectDirectory: () => Promise<string | null>
   openDirectory: (path: string) => Promise<void>
   getCloneHeroSettings: () => Promise<{ settingsPath: string; songDirectories: string[] } | null>
+  saveUserSettings: (settings: any) => Promise<any>
+  getUserSettings: () => Promise<any>
+  toggleOverlay: () => Promise<boolean>
+  hideOverlay: () => Promise<boolean>
+  focusMainWindow: () => Promise<boolean>
 }
 
 export interface DownloadSongData {

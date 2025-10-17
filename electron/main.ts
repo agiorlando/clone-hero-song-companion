@@ -1,15 +1,17 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, globalShortcut, screen } from 'electron'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 import { tmpdir } from 'os'
 import axios, { AxiosInstance } from 'axios'
 import extractZip from 'extract-zip'
 import * as fsExtra from 'fs-extra'
+import activeWin from 'active-win'
 
 // User settings storage
 interface UserSettings {
   downloadDirectory?: string
   downloadFormat?: 'zip' | 'sng'
+  overlayAlwaysActive?: boolean // Allow overlay to work without Clone Hero detection
 }
 
 let userSettings: UserSettings = {}
@@ -193,6 +195,13 @@ if (require('electron-squirrel-startup')) app.quit()
 let mainWindow: BrowserWindow
 let hiddenBrowserWindow: BrowserWindow | null = null
 let hiddenBrowserReady = false
+// In-game overlay functionality
+// - Triggered by tilde (`) key globally
+// - Slides in from left side of screen
+// - No OS decorations (borderless)
+// - Always on top for in-game use
+let overlayWindow: BrowserWindow | null = null
+let overlayVisible = false
 
 const createHiddenBrowser = (): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -258,6 +267,192 @@ const createHiddenBrowser = (): Promise<void> => {
 const ensureHiddenBrowser = async (): Promise<void> => {
   if (!hiddenBrowserWindow || hiddenBrowserWindow.isDestroyed() || !hiddenBrowserReady) {
     await createHiddenBrowser()
+  }
+}
+
+// Create overlay window
+const createOverlayWindow = (): void => {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    return // Already exists
+  }
+
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize
+
+  const overlayWidth = Math.min(400, Math.floor(screenWidth * 0.3)) // Max 30% of screen width
+  
+  const windowOptions: any = {
+    width: overlayWidth,
+    height: screenHeight,
+    x: -overlayWidth, // Start hidden off-screen to the left
+    y: 0,
+    frame: false, // No OS decorations
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    closable: false,
+    focusable: true,
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: join(__dirname, 'preload.js'),
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+    },
+  }
+
+  // macOS-specific options for highest z-order
+  if (process.platform === 'darwin') {
+    windowOptions.type = 'panel'
+    windowOptions.level = 'screen-saver'
+  }
+
+  overlayWindow = new BrowserWindow(windowOptions)
+
+  // Load overlay HTML
+  if (process.env.NODE_ENV === 'development') {
+    overlayWindow.loadURL('http://localhost:3000/overlay.html')
+  } else {
+    // In production, load the built overlay HTML file
+    const possiblePaths = [
+      join(__dirname, '../renderer/overlay.html'),
+      join(__dirname, 'renderer/overlay.html'),
+      join(process.resourcesPath, 'app/dist/renderer/overlay.html')
+    ]
+    
+    let overlayPath = possiblePaths[0]
+    for (const path of possiblePaths) {
+      if (fsExtra.existsSync(path)) {
+        overlayPath = path
+        break
+      }
+    }
+    
+    overlayWindow.loadFile(overlayPath)
+  }
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null
+    overlayVisible = false
+  })
+
+  // Prevent the overlay from being focused away from the game
+  overlayWindow.on('blur', () => {
+    if (overlayVisible) {
+      overlayWindow?.setAlwaysOnTop(true)
+    }
+  })
+}
+
+// Check if Clone Hero is the currently active window (specifically fullscreen)
+const isCloneHeroActive = async (): Promise<boolean> => {
+  try {
+    const activeWindow = await activeWin()
+    if (!activeWindow) {
+      console.log('No active window detected, allowing overlay (fallback)')
+      return true // Fallback: allow overlay if we can't detect
+    }
+    
+    const windowTitle = activeWindow.title?.toLowerCase() || ''
+    const processName = activeWindow.owner?.name?.toLowerCase() || ''
+    
+    // More specific Clone Hero detection - must have "clone hero" in title
+    const hasCloneHeroInTitle = windowTitle.includes('clone hero')
+    const hasCloneHeroInProcess = processName.includes('clone hero') || 
+                                  processName.includes('clonehero')
+    
+    // Check if window appears to be fullscreen (common for games)
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const screenBounds = primaryDisplay.bounds
+    const windowBounds = activeWindow.bounds
+    
+    const isFullscreen = windowBounds && 
+      windowBounds.width >= screenBounds.width * 0.9 && 
+      windowBounds.height >= screenBounds.height * 0.9
+    
+    // Must have Clone Hero in title/process AND be fullscreen-ish
+    const isCloneHero = hasCloneHeroInTitle || hasCloneHeroInProcess
+    
+    console.log('Window detection:', {
+      title: activeWindow.title,
+      process: activeWindow.owner?.name,
+      isCloneHero,
+      isFullscreen,
+      bounds: windowBounds,
+      screenBounds
+    })
+    
+    return isCloneHero && isFullscreen
+  } catch (error) {
+    console.error('Failed to get active window:', error)
+    // If we get a permission error, allow overlay to work anyway
+    if (error instanceof Error && error.message?.includes('screen recording permission')) {
+      console.log('Screen recording permission needed, but allowing overlay to work')
+      return true
+    }
+    return false
+  }
+}
+
+// Toggle overlay visibility with slide animation
+const toggleOverlay = async (): Promise<void> => {
+  console.log('toggleOverlay called, current overlayVisible:', overlayVisible)
+  
+  // Only show overlay if Clone Hero is active (unless bypassed in settings)
+  if (!overlayVisible && !userSettings.overlayAlwaysActive) {
+    const isActive = await isCloneHeroActive()
+    if (!isActive) {
+      console.log('Overlay hotkey pressed, but Clone Hero is not the active window')
+      // For debugging, let's also log what window is active
+      try {
+        const activeWindow = await activeWin()
+        console.log('Active window:', {
+          title: activeWindow?.title,
+          owner: activeWindow?.owner?.name,
+          pid: activeWindow?.owner?.processId
+        })
+      } catch (error) {
+        console.log('Could not get active window info')
+      }
+      return
+    }
+  }
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    createOverlayWindow()
+  }
+
+  if (!overlayWindow) return
+
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize
+  const overlayWidth = Math.min(400, Math.floor(screenWidth * 0.3))
+
+  if (overlayVisible) {
+    // Hide overlay immediately without animation for now
+    console.log('Hiding overlay (was visible)')
+    overlayWindow.hide()
+    overlayVisible = false
+    return
+  } else {
+    // Show overlay - simplified without animation for now
+    console.log('Showing overlay (was hidden)')
+    try {
+      overlayWindow.setSize(overlayWidth, screenHeight)
+      overlayWindow.setPosition(0, 0) // Show at left edge
+      overlayWindow.setAlwaysOnTop(true, 'screen-saver') // Force highest level
+      overlayWindow.show()
+      overlayWindow.focus() // Ensure it gets focus
+      overlayVisible = true
+      console.log('Overlay shown successfully, overlayVisible set to:', overlayVisible)
+    } catch (error) {
+      console.error('Error showing overlay:', error)
+      overlayVisible = false
+    }
   }
 }
 
@@ -327,11 +522,53 @@ app.whenReady().then(async () => {
   userSettings = await loadSettings()
   
   createWindow()
+  
+  // Register global hotkey for overlay toggle (tilde key)
+  const overlayHotkey = '`' // Tilde/backtick key
+  const registered = globalShortcut.register(overlayHotkey, async () => {
+    console.log('Overlay hotkey pressed')
+    try {
+      await toggleOverlay()
+    } catch (error) {
+      console.error('Error in overlay toggle:', error)
+    }
+  })
+  
+  // In development mode, also register Cmd+` (or Ctrl+`) for testing without Clone Hero
+  if (process.env.NODE_ENV === 'development') {
+    const testHotkey = process.platform === 'darwin' ? 'Cmd+`' : 'Ctrl+`'
+    const testRegistered = globalShortcut.register(testHotkey, async () => {
+      console.log('Test overlay hotkey pressed (bypassing Clone Hero detection)')
+      try {
+        const originalSetting = userSettings.overlayAlwaysActive
+        userSettings.overlayAlwaysActive = true
+        await toggleOverlay()
+        userSettings.overlayAlwaysActive = originalSetting
+      } catch (error) {
+        console.error('Error in test overlay toggle:', error)
+      }
+    })
+    
+    if (testRegistered) {
+      console.log(`Test overlay hotkey registered: ${testHotkey} (development only)`)
+    }
+  }
+  
+  if (!registered) {
+    console.error('Failed to register overlay hotkey')
+  } else {
+    console.log(`Overlay hotkey registered: ${overlayHotkey}`)
+  }
 })
 
 // Quit when all windows are closed, except on macOS
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('will-quit', () => {
+  // Unregister all global shortcuts
+  globalShortcut.unregisterAll()
 })
 
 app.on('activate', () => {
@@ -698,4 +935,34 @@ ipcMain.handle('save-user-settings', async (event, settings: Partial<UserSetting
 // Get user settings
 ipcMain.handle('get-user-settings', async () => {
   return userSettings
+})
+
+// Overlay control handlers
+ipcMain.handle('toggle-overlay', async () => {
+  await toggleOverlay()
+  return overlayVisible
+})
+
+ipcMain.handle('hide-overlay', async () => {
+  console.log('hide-overlay IPC called, current overlayVisible:', overlayVisible)
+  
+  // Force hide the overlay regardless of state
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    console.log('Force hiding overlay window')
+    overlayWindow.hide()
+    overlayVisible = false
+    return true
+  }
+  
+  console.log('No overlay window to hide')
+  return false
+})
+
+ipcMain.handle('focus-main-window', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show()
+    mainWindow.focus()
+    return true
+  }
+  return false
 })

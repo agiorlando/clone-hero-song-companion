@@ -20,6 +20,11 @@ const electronAPI = {
   // User settings
   saveUserSettings: (settings: any) => ipcRenderer.invoke('save-user-settings', settings),
   getUserSettings: () => ipcRenderer.invoke('get-user-settings'),
+
+  // Overlay controls
+  toggleOverlay: () => ipcRenderer.invoke('toggle-overlay'),
+  hideOverlay: () => ipcRenderer.invoke('hide-overlay'),
+  focusMainWindow: () => ipcRenderer.invoke('focus-main-window'),
 }
 
 // Expose the API to the renderer process
