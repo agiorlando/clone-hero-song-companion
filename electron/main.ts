@@ -316,7 +316,7 @@ const createOverlayWindow = (): void => {
 
   // Load overlay HTML
   if (process.env.NODE_ENV === 'development') {
-    overlayWindow.loadURL('http://localhost:3000/overlay.html')
+    overlayWindow.loadURL('http://localhost:3001/overlay.html')
   } else {
     // In production, load the built overlay HTML file
     const possiblePaths = [

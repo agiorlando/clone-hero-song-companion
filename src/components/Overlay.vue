@@ -28,15 +28,21 @@
       <!-- Search Results -->
       <div v-if="searchResults.length > 0" class="search-results-section">
         <h3>Search Results ({{ searchResults.length }})</h3>
-        <div class="search-results-list">
+        <div class="search-results-list" @scroll="handleScroll" ref="searchResultsContainer">
           <div 
-            v-for="song in searchResults.slice(0, 5)" 
+            v-for="song in searchResults" 
             :key="song.chartId"
             class="search-result-item"
           >
             <div class="song-info">
               <div class="song-title">{{ song.artist }} - {{ song.name }}</div>
-              <div class="song-meta">{{ song.charter }} • {{ song.genre }}</div>
+              <div class="song-meta">
+                <span>{{ song.charter }} • {{ song.genre }}</span>
+                <span class="separator">•</span>
+                <span class="guitar-difficulty">
+                  🎸 {{ getDifficultyStars(song.diff_guitar || -1) }}
+                </span>
+              </div>
             </div>
             <button @click="quickDownload(song)" class="download-btn" title="Quick Download">
               ⬇️
@@ -134,12 +140,18 @@ import { ref, onMounted } from 'vue'
 // Reactive state
 const searchQuery = ref('')
 const loading = ref(false)
+const loadingMore = ref(false)
 const recentDownloads = ref<any[]>([])
 const searchResults = ref<any[]>([])
+const currentPage = ref(1)
+const hasMoreResults = ref(false)
+const lastSearchQuery = ref('')
 const totalDownloads = ref(0)
 const downloadFormat = ref<'zip' | 'sng'>('zip')
 const downloadNotification = ref<{type: 'success' | 'error', message: string} | null>(null)
 const downloadProgress = ref<{songName: string, progress: number, isActive: boolean} | null>(null)
+const searchResultsContainer = ref<HTMLElement | null>(null)
+let scrollTimeout: NodeJS.Timeout | null = null
 
 // Methods
 const closeOverlay = async () => {
@@ -161,15 +173,26 @@ const performSearch = async () => {
   
   loading.value = true
   try {
-    console.log('Performing search in overlay:', searchQuery.value)
+    
+    // Reset pagination for new search
+    currentPage.value = 1
+    lastSearchQuery.value = searchQuery.value
+    
     // Perform search directly in the overlay without switching to main app
     const results = await window.electronAPI?.searchSongs(searchQuery.value, 1)
-    console.log('Search results:', results)
     
     if (results && results.data && results.data.length > 0) {
       searchResults.value = results.data
+      // Use the same logic as main app: check if we have fewer results than total found
+      hasMoreResults.value = results.data.length < results.found
     } else {
       searchResults.value = []
+      hasMoreResults.value = false
+    }
+    
+    // Reset scroll to top for new search
+    if (searchResultsContainer.value) {
+      searchResultsContainer.value.scrollTop = 0
     }
     
     // Clear search query but keep results visible
@@ -177,9 +200,47 @@ const performSearch = async () => {
   } catch (error) {
     console.error('Search failed:', error)
     searchResults.value = []
+    hasMoreResults.value = false
   } finally {
     loading.value = false
   }
+}
+
+const loadMoreResults = async () => {
+  if (!lastSearchQuery.value || loadingMore.value || !hasMoreResults.value) return
+  
+  loadingMore.value = true
+  try {
+    const nextPage = currentPage.value + 1
+    const results = await window.electronAPI?.searchSongs(lastSearchQuery.value, nextPage)
+    
+    if (results && results.data && results.data.length > 0) {
+      // Append new results to existing ones
+      searchResults.value = [...searchResults.value, ...results.data]
+      currentPage.value = nextPage
+      // Use same logic as main app: check if total loaded is less than total found
+      hasMoreResults.value = searchResults.value.length < results.found
+    } else {
+      hasMoreResults.value = false
+    }
+  } catch (error) {
+    console.error('Failed to load more results:', error)
+    hasMoreResults.value = false
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+const getDifficultyStars = (difficulty: number): string => {
+  if (difficulty === -1) return '☆☆☆☆☆' // No guitar track
+  
+  // Difficulty values: 0=Easy, 1=Medium, 2=Hard, 3=Expert, 4=Expert+
+  // Convert to 1-5 stars: Easy=1★, Medium=2★, Hard=3★, Expert=4★, Expert+=5★
+  const stars = difficulty + 1
+  const fullStars = Math.min(stars, 5)
+  const emptyStars = 5 - fullStars
+  
+  return '★'.repeat(fullStars) + '☆'.repeat(emptyStars)
 }
 
 const quickDownload = async (song: any) => {
@@ -305,6 +366,22 @@ const openDownloadFolder = async (path?: string) => {
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+const handleScroll = (event: Event) => {
+  const container = event.target as HTMLElement
+  if (!container || loadingMore.value) return
+  
+  const scrollTop = container.scrollTop
+  const scrollHeight = container.scrollHeight
+  const clientHeight = container.clientHeight
+  
+  // Trigger infinite scroll when 80% scrolled
+  const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
+  
+  if (scrollPercentage >= 0.8 && hasMoreResults.value && !loadingMore.value) {
+    loadMoreResults()
+  }
 }
 
 // Load data on mount
@@ -444,8 +521,9 @@ onMounted(async () => {
 }
 
 .search-results-list {
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .search-result-item {
@@ -529,6 +607,19 @@ onMounted(async () => {
 .song-meta {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.separator {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.guitar-difficulty {
+  color: rgba(255, 215, 0, 0.9);
+  font-weight: 500;
 }
 
 .open-folder-btn {
@@ -605,6 +696,7 @@ onMounted(async () => {
 .action-btn.primary:hover {
   background: rgba(76, 175, 80, 1);
 }
+
 
 .overlay-footer {
   padding: 1rem 1.5rem;
