@@ -234,13 +234,11 @@ const loadMoreResults = async () => {
 const getDifficultyStars = (difficulty: number): string => {
   if (difficulty === -1) return '☆☆☆☆☆' // No guitar track
   
-  // Difficulty values: 0=Easy, 1=Medium, 2=Hard, 3=Expert, 4=Expert+
-  // Convert to 1-5 stars: Easy=1★, Medium=2★, Hard=3★, Expert=4★, Expert+=5★
-  const stars = difficulty + 1
-  const fullStars = Math.min(stars, 5)
-  const emptyStars = 5 - fullStars
+  // API already returns 1-5 star values, no conversion needed
+  const stars = Math.max(0, Math.min(difficulty, 5)) // Clamp between 0-5
+  const emptyStars = 5 - stars
   
-  return '★'.repeat(fullStars) + '☆'.repeat(emptyStars)
+  return '★'.repeat(stars) + '☆'.repeat(emptyStars)
 }
 
 const quickDownload = async (song: any) => {
