@@ -74,10 +74,45 @@ jobs:
         run: |
           npm run build
           # Build x64 and ARM64 separately to avoid universal binary issues with active-win
+          
+          # Create temporary config for x64 build
+          cat > electron-builder-x64.json << 'EOF'
+          {
+            "extends": "./package.json",
+            "mac": {
+              "category": "public.app-category.music",
+              "icon": "assets/icons/chsc.iconset",
+              "target": {
+                "target": "dmg",
+                "arch": "x64"
+              }
+            }
+          }
+          EOF
+          
           echo "Building macOS x64..."
-          npx electron-builder --mac --x64 --publish never
+          npx electron-builder --config electron-builder-x64.json --publish never
+          
+          # Create temporary config for ARM64 build
+          cat > electron-builder-arm64.json << 'EOF'
+          {
+            "extends": "./package.json",
+            "mac": {
+              "category": "public.app-category.music",
+              "icon": "assets/icons/chsc.iconset",
+              "target": {
+                "target": "dmg",
+                "arch": "arm64"
+              }
+            }
+          }
+          EOF
+          
           echo "Building macOS ARM64..."
-          npx electron-builder --mac --arm64 --publish never
+          npx electron-builder --config electron-builder-arm64.json --publish never
+          
+          # Clean up temporary configs
+          rm -f electron-builder-x64.json electron-builder-arm64.json
           # Post-build: Sign the builds
           echo "Signing macOS builds..."
           for APP_PATH in $(find release -name "*.app" -type d); do
