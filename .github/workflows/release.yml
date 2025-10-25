@@ -67,29 +67,27 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Electron app (macOS Universal)
+      - name: Build Electron app (macOS)
         if: matrix.platform == 'mac'
         shell: bash
         run: |
           npm run build
-          # Build universal binary (both x64 and ARM64 in one app)
-          npx electron-builder --mac --universal
-          # Post-build: Sign the universal build
-          echo "Signing universal macOS build..."
-          APP_PATH=$(find release -name "*.app" -type d | head -1)
-          if [ -n "$APP_PATH" ]; then
-            echo "Found app at: $APP_PATH"
-            # Remove any problematic attributes
-            sudo xattr -cr "$APP_PATH" || true
-            # Sign with ad-hoc signature
-            codesign --force --deep --sign - "$APP_PATH" || echo "Signing failed, continuing..."
-            # Verify the signature
-            codesign --verify --verbose "$APP_PATH" || echo "Verification failed, but may still work"
-            echo "✅ Universal build completed"
-          else
-            echo "❌ No .app found in release directory"
-            ls -la release/ || echo "No release directory"
-          fi
+          # Build separate x64 and ARM64 binaries (avoids active-win universal binary issues)
+          npm run build:mac
+          # Post-build: Sign the builds
+          echo "Signing macOS builds..."
+          for APP_PATH in $(find release -name "*.app" -type d); do
+            if [ -n "$APP_PATH" ]; then
+              echo "Found app at: $APP_PATH"
+              # Remove any problematic attributes
+              sudo xattr -cr "$APP_PATH" || true
+              # Sign with ad-hoc signature
+              codesign --force --deep --sign - "$APP_PATH" || echo "Signing failed, continuing..."
+              # Verify the signature
+              codesign --verify --verbose "$APP_PATH" || echo "Verification failed, but may still work"
+            fi
+          done
+          echo "✅ macOS builds completed"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
