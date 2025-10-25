@@ -107,7 +107,14 @@ jobs:
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
-        if: hashFiles('release/*') != ''
+        if: hashFiles('release/*') != '' && github.event_name == 'release'
         with:
           files: release/*
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload Artifacts (Manual Trigger)
+        uses: actions/upload-artifact@v4
+        if: hashFiles('release/*') != '' && github.event_name == 'workflow_dispatch'
+        with:
+          name: release-${{ matrix.platform }}
+          path: release/*
