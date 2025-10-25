@@ -168,7 +168,7 @@ jobs:
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
-        if: hashFiles('release/*') != '' && github.event_name == 'release'
+        if: hashFiles('release/*') != '' && (github.event_name == 'release' || startsWith(github.ref, 'refs/tags/'))
         with:
           files: release/*
           token: ${{ secrets.GITHUB_TOKEN }}
