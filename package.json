@@ -58,6 +58,9 @@
       "node_modules/**/*",
       "assets/**/*"
     ],
+    "asarUnpack": [
+      "node_modules/active-win/**/*"
+    ],
     "icon": "assets/icons/icon.png",
     "mac": {
       "category": "public.app-category.music",
@@ -66,7 +69,8 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "x64",
+            "arm64"
           ]
         }
       ]
