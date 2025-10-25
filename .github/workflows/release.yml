@@ -72,8 +72,11 @@ jobs:
         shell: bash
         run: |
           npm run build
-          # Build separate x64 and ARM64 binaries (avoids active-win universal binary issues)
-          npm run build:mac
+          # Build x64 and ARM64 separately to avoid universal binary issues with active-win
+          echo "Building macOS x64..."
+          npm run build:mac-x64
+          echo "Building macOS ARM64..."
+          npm run build:mac-arm64
           # Post-build: Sign the builds
           echo "Signing macOS builds..."
           for APP_PATH in $(find release -name "*.app" -type d); do
