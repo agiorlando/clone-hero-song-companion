@@ -78,7 +78,20 @@ jobs:
           # Create temporary config for x64 build
           cat > electron-builder-x64.json << 'EOF'
           {
-            "extends": "./package.json",
+            "appId": "com.yourname.clone-hero-companion",
+            "productName": "Clone Hero Song Companion",
+            "directories": {
+              "output": "release"
+            },
+            "files": [
+              "dist/**/*",
+              "node_modules/**/*",
+              "assets/**/*"
+            ],
+            "asarUnpack": [
+              "node_modules/active-win/**/*"
+            ],
+            "icon": "assets/icons/icon.png",
             "mac": {
               "category": "public.app-category.music",
               "icon": "assets/icons/chsc.iconset",
@@ -96,7 +109,20 @@ jobs:
           # Create temporary config for ARM64 build
           cat > electron-builder-arm64.json << 'EOF'
           {
-            "extends": "./package.json",
+            "appId": "com.yourname.clone-hero-companion",
+            "productName": "Clone Hero Song Companion",
+            "directories": {
+              "output": "release"
+            },
+            "files": [
+              "dist/**/*",
+              "node_modules/**/*",
+              "assets/**/*"
+            ],
+            "asarUnpack": [
+              "node_modules/active-win/**/*"
+            ],
+            "icon": "assets/icons/icon.png",
             "mac": {
               "category": "public.app-category.music",
               "icon": "assets/icons/chsc.iconset",
