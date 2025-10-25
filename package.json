@@ -64,17 +64,7 @@
     "icon": "assets/icons/icon.png",
     "mac": {
       "category": "public.app-category.music",
-      "icon": "assets/icons/chsc.iconset",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": "x64"
-        },
-        {
-          "target": "dmg", 
-          "arch": "arm64"
-        }
-      ]
+      "icon": "assets/icons/chsc.iconset"
     },
     "win": {
       "icon": "assets/icons/chsc.ico",
